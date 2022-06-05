@@ -5,7 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Scanner;
 
 public class CurrencySalesApp extends JFrame {
 
@@ -28,12 +31,12 @@ public class CurrencySalesApp extends JFrame {
     private JList list; // displays all the entries
     private DefaultListModel listModel;
 
-    private JLabel addCountryLBL;
+    private JLabel addCurrencyLBL;
     private JLabel addPriceLBL;
     private JLabel addDateLBL;
     private JLabel totalLBL;
 
-    private JTextField addCountryTF;
+    private JTextField addCurrencyTF;
     private JTextField addPriceTF;
     private JTextField addDateTF;
 
@@ -42,11 +45,18 @@ public class CurrencySalesApp extends JFrame {
     // displayed dates are changed when the user clicks this button. I decided this was a b
     private JButton changeDatesBTN;
 
+    CurrencyUtil currencyUtil;
+
 
     // main constructor
     public CurrencySalesApp() {
         sales = new ArrayList<Sale>();
         initializeUI();
+        currencyUtil = new CurrencyUtil();
+        if (!currencyUtil.initialize()) {
+            System.err.println("Error: unable to read currency rates from API");
+            System.exit(1);
+        }
     }
 
     /*
@@ -56,7 +66,7 @@ public class CurrencySalesApp extends JFrame {
         CurrencySalesApp p2t = new CurrencySalesApp();
 
         /* Hard coded entries */
-        p2t.addSaleToList(new Sale("BDT", "96.99", "10/14/2006"));
+        p2t.addSaleToList(new Sale("BDT", "132.55", "10/14/2006"));
     }
 
     /*
@@ -66,9 +76,9 @@ public class CurrencySalesApp extends JFrame {
 
         // create Panels
         mainPanel = new JPanel(new BorderLayout());
-        topPanel = new JPanel(new GridLayout(1, 3,0,0));
-        centerPanel = new JPanel(new GridLayout(1,1,0,0));
-        bottomPanel = new JPanel(new GridLayout(2,4,2,0));
+        topPanel = new JPanel(new GridLayout(1, 3, 0, 0));
+        centerPanel = new JPanel(new GridLayout(1, 1, 0, 0));
+        bottomPanel = new JPanel(new GridLayout(2, 4, 2, 0));
 
         // For topPanel
         Calendar cal = Calendar.getInstance();
@@ -109,22 +119,22 @@ public class CurrencySalesApp extends JFrame {
 
         // For bottomPanel
 
-        addCountryLBL = new JLabel("\tCountry Code");
+        addCurrencyLBL = new JLabel("\tCurrency Code");
         addPriceLBL = new JLabel("\tPrice");
         addDateLBL = new JLabel("\tDate");
         totalLBL = new JLabel("Total: ");
 
-        addCountryTF = new JTextField("BRA");
+        addCurrencyTF = new JTextField("BRA");
         addPriceTF = new JTextField("100.00");
         addDateTF = new JTextField("1/1/2018");
         addBTN = new JButton("Add");
         addBTN.addActionListener(new AddButtonListener());
 
-        bottomPanel.add(addCountryLBL);
+        bottomPanel.add(addCurrencyLBL);
         bottomPanel.add(addPriceLBL);
         bottomPanel.add(addDateLBL);
         bottomPanel.add(totalLBL);
-        bottomPanel.add(addCountryTF);
+        bottomPanel.add(addCurrencyTF);
         bottomPanel.add(addPriceTF);
         bottomPanel.add(addDateTF);
         bottomPanel.add(addBTN);
@@ -158,10 +168,10 @@ public class CurrencySalesApp extends JFrame {
 
         for (int i = 0; i < list.getModel().getSize(); i++) {
 
-            // country code, date and price is separated by '·'
+            // currency code, date and price is separated by '·'
             String[] tokens = list.getModel().getElementAt(i).toString().split("·");
 
-            String country = tokens[0].trim();
+            String currency = tokens[0].trim();
             String unformattedDate = tokens[1].trim();
             double price = Double.parseDouble(tokens[2].trim().replaceAll(",", ""));
 
@@ -174,7 +184,7 @@ public class CurrencySalesApp extends JFrame {
 
             }
 
-            displayedRES.add(new Sale(country, price, date));
+            displayedRES.add(new Sale(currency, price, date));
         }
 
         return displayedRES; // return the new ArrayList<Sale>
@@ -236,10 +246,10 @@ public class CurrencySalesApp extends JFrame {
 
         for (Sale res : displayedRES) {
 
-            if (true /*CurrencyUtil2.checkCountryCurrencyCodeAvailability(res.getCountry())*/) {
-                total += CurrencyUtil2.currConvert(res.getCountry(), res.getPrice());
+            if (currencyUtil.checkCurrencyCode(res.getCurrency())) {
+                total += currencyUtil.currConvert(res.getCurrency(), res.getPrice());
             } else {
-                System.err.println("Currency for " + res.getCountry()
+                System.err.println("Currency for " + res.getCurrency()
                         + " is not supported. Value not added to total price.");
             }
 
@@ -253,16 +263,16 @@ public class CurrencySalesApp extends JFrame {
 
 
     // adds entry to JList
-    public void addSaleToList(String country, double price, Date date) {
+    public void addSaleToList(String currency, double price, Date date) {
 
-        sales.add(new Sale(country, price, date));
+        sales.add(new Sale(currency, price, date));
         updateSalesJList();
         calculateTotal();
     }
 
     // adds entry to JList using a Sale reference
     public void addSaleToList(Sale res) {
-        addSaleToList(res.getCountry(), res.getPrice(), res.getDate());
+        addSaleToList(res.getCurrency(), res.getPrice(), res.getDate());
     }
 
     // to display the JList for Sale
@@ -285,37 +295,34 @@ public class CurrencySalesApp extends JFrame {
     // used to add entry to JList AFTER validating user entries.
     class AddButtonListener implements ActionListener {
         public void actionPerformed(ActionEvent event) {
-            String userCountryCode = addCountryTF.getText();
+            String userCurrencyCode = addCurrencyTF.getText();
             String userPrice = addPriceTF.getText();
             String userDate = addDateTF.getText();
 
-            boolean userCountryCodeisValid = false;
-            boolean userPriceisValid = false;
-            boolean userDateisValid = false;
+            boolean userCurrencyCodeisValid, userPriceisValid = false, userDateisValid;
 
 
-            // Validate user country code6
-//            userCountryCodeisValid = Sale.validateCountryCode(userCountryCode);
-            userCountryCodeisValid = true;
+            userCurrencyCodeisValid = currencyUtil.checkCurrencyCode(userCurrencyCode);
+            userCurrencyCodeisValid = true;
 
-            if (!userCountryCodeisValid) {
-                JOptionPane.showMessageDialog(bottomPanel, "That is not a valid country code.",
-                        "Invalid Country Code",  JOptionPane.ERROR_MESSAGE);
+            if (!userCurrencyCodeisValid) {
+                JOptionPane.showMessageDialog(bottomPanel, "That is not a valid currency code.",
+                        "Invalid Currency Code", JOptionPane.ERROR_MESSAGE);
             }
 
             // Validate user price
-            double price =  0;
+            double price = 0;
 
             if (new Scanner(userPrice).hasNextDouble()) {
                 userPriceisValid = Sale.validatePrice(Double.parseDouble(userPrice));
                 price = Double.parseDouble(userPrice);
                 if (!userPriceisValid) {
                     JOptionPane.showMessageDialog(bottomPanel, "Price must be greater than 0.",
-                            "Invalid Price",  JOptionPane.ERROR_MESSAGE);
+                            "Invalid Price", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(bottomPanel, "That is not a valid price.",
-                        "Invalid Price",  JOptionPane.ERROR_MESSAGE);
+                        "Invalid Price", JOptionPane.ERROR_MESSAGE);
             }
 
             // Validate user date
@@ -338,15 +345,14 @@ public class CurrencySalesApp extends JFrame {
 
 
             // Now: if everything is valid, then add it to the JList
-            if (userCountryCodeisValid && userPriceisValid && userDateisValid) {
-                // exchangeratesapi.io does not support all currency, so make sure the added country is supported first.
-                if (true/*CurrencyUtil2.checkCountryCurrencyCodeAvailability(userCountryCode)*/) {
-                    addSaleToList(userCountryCode, price, date);
+            if (userCurrencyCodeisValid && userPriceisValid && userDateisValid) {
+                if (currencyUtil.checkCurrencyCode(userCurrencyCode)) {
+                    addSaleToList(userCurrencyCode, price, date);
                     //updateSalesListFromJList();
                 } else {
                     JOptionPane.showMessageDialog(bottomPanel,
                             "The currency for this country is not supported in this application.",
-                            "Unsupported Country Code",  JOptionPane.ERROR_MESSAGE);
+                            "Unsupported Country Code", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }

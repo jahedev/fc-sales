@@ -5,34 +5,34 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Sale {
-    private final String country; // ISO 3 country code
+    private final String currency; // ISO 4217 Three Letter Currency Codes
     private final double price; // price of sale
     private final Date dateOfSale; // date of sale
 
-    // Main Constructor: create an object with desired country code, price and date.
-    public Sale(String country, double price, Date dateOfSale) {
-        this.country = country;
+    // Main Constructor: create an object with desired currency code, price and date.
+    public Sale(String currency, double price, Date dateOfSale) {
+        this.currency = currency;
         this.price = price;
         this.dateOfSale = dateOfSale;
     }
 
     // create an object with the current date
-    public Sale(String country, double price) {
-        this(country, price, new Date());
+    public Sale(String currency, double price) {
+        this(currency, price, new Date());
     }
 
-    // create an object with the current date and country as USA
+    // create an object with the current date and currency as USD
     public Sale(double price) {
-        this("USA", price, new Date());
+        this("USD", price, new Date());
     }
 
     // create an object from String arguments, parsing them first.
-    public Sale(String country, String stringPrice, String stringDateOfSale) {
-        this(country, parsePrice(stringPrice), parseDate(stringDateOfSale));
+    public Sale(String currency, String stringPrice, String stringDateOfSale) {
+        this(currency, parsePrice(stringPrice), parseDate(stringDateOfSale));
     }
 
-    public String getCountry() {
-        return country;
+    public String getCurrency() {
+        return currency;
     }
 
     public double getPrice() {
@@ -43,18 +43,6 @@ public class Sale {
         return dateOfSale;
     }
 
-    /*
-     * Check if country code is valid, if not, then set it to USA
-     *
-     * return String object of valid country code
-     */
-    public static String parseCountryCode(String countryCode) {
-        if (validateCountryCode(countryCode)) {
-            return countryCode;
-        } else {
-            return "USA";
-        }
-    }
 
     /*
      * Try parsing stringPrice as double and check if it is >= 0.0, if unsuccessful, return 0.0
@@ -95,18 +83,6 @@ public class Sale {
     }
 
     /*
-     * Check if given ISO 3 country code is valid and return a boolean value.
-     */
-    public static boolean validateCountryCode(String countryCode) {
-        for (String validCountryCode : CurrencyUtil.countryCodes) {
-            if (validCountryCode.equals(countryCode.trim())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /*
      * Check if given price is valid and above 0.0 and return a boolean value.
      */
     public static boolean validatePrice(double price) {
@@ -141,6 +117,6 @@ public class Sale {
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setGroupingUsed(true);
 
-        return getCountry() + "  ·  " + localDateFormat.format(getDate()) + "  ·  " + numberFormat.format(getPrice());
+        return getCurrency() + "  ·  " + localDateFormat.format(getDate()) + "  ·  " + numberFormat.format(getPrice());
     }
 }
