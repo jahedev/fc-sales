@@ -9,11 +9,14 @@ any **sale** made with any **foreign currency**, in any date, and displays the *
 ### Description:
 
 + The currency is selected by using ISO-4217 currency codes. Click [here](https://en.wikipedia.org/wiki/ISO_4217) for all currency codes.
-+ The currencies are provided by https://www.exchangerate-api.com API.
-+ The price any value greater than 0.
-+ The date when the sale took place.
-+ 2 date range fields on the top to display only sales taken place within a specific date range.
-+ Whenever a record is added, the total sum of sales is calculated in US Dollars in the bottom right corner.
++ The currencies are provided by **exchangerate-api.com** API.
++ [json-simple](https://code.google.com/archive/p/json-simple/) library is used to parson JSON from exchnage rates API.
++ **Fields:**
+  + **Curency Code:** 3 Letter ISO-4217 Currency Code
+  + **Price:** Any value > 0. 
+  + **Date:** refers to when the sale took place (MM/DD/YYYY).
+  + **Date Range:** to display only sales taken place within the specific date range.
+  + Whenever a record is added, the total sum of sales is calculated in US Dollars in the bottom right corner.
 + A custom JList renders all records on screen.
 
 ### Screenshot
