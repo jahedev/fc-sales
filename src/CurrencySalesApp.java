@@ -64,9 +64,6 @@ public class CurrencySalesApp extends JFrame {
      */
     public static void main(String[] args) {
         CurrencySalesApp p2t = new CurrencySalesApp();
-
-        /* Hard coded entries */
-        p2t.addSaleToList(new Sale("BDT", "132.55", "10/14/2006"));
     }
 
     /*
@@ -306,7 +303,7 @@ public class CurrencySalesApp extends JFrame {
             userCurrencyCodeisValid = true;
 
             if (!userCurrencyCodeisValid) {
-                JOptionPane.showMessageDialog(bottomPanel, "That is not a valid currency code.",
+                JOptionPane.showMessageDialog(bottomPanel, "That currency code is not supported.",
                         "Invalid Currency Code", JOptionPane.ERROR_MESSAGE);
             }
 
@@ -351,8 +348,8 @@ public class CurrencySalesApp extends JFrame {
                     //updateSalesListFromJList();
                 } else {
                     JOptionPane.showMessageDialog(bottomPanel,
-                            "The currency for this country is not supported in this application.",
-                            "Unsupported Country Code", JOptionPane.ERROR_MESSAGE);
+                            "This currency is not supported in this application.",
+                            "Unsupported Currency Code", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
