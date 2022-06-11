@@ -9,7 +9,7 @@ import org.json.simple.parser.JSONParser;
 
 class CurrencyUtil {
 
-    private final String API_URL = "https://open.er-api.com/v6/latest/USDa";
+    private final String API_URL = "https://open.er-api.com/v6/latest/USD";
 
     private HashMap<String, Double> IsoCurrencyToRates;
 
